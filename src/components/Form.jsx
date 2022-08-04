@@ -1,9 +1,8 @@
 import React from "react";
-import { Button } from "./Button";
+import { Button } from "./shared/Button";
 import Card from "./shared/Card";
 import { useState } from "react";
 import RatingSelect from "./RatingSelect";
-import { v4 as uuidv4 } from "uuid";
 import { useContext, useEffect } from "react";
 import FeedbackContext from "../context/FeedbackContext";
 
@@ -33,7 +32,7 @@ export const Form = () => {
     const newFeedback = {
       text: text,
       rating: rating,
-      id: uuidv4(),
+      // id: uuidv4(),
     };
 
     if (currEdit.edit) {
@@ -42,7 +41,6 @@ export const Form = () => {
         rating,
       };
       updateItem(currEdit.item.id, edited);
-      
     } else {
       addItem(newFeedback);
     }

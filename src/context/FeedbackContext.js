@@ -1,30 +1,25 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 const FeedbackContext = createContext();
 
 export const FeedbackProvider = ({ children }) => {
-  const [feedback, setFeedback] = useState([
-    {
-      id: 1,
-      rating: 1,
-      text: "Feedback 1",
-    },
-    {
-      id: 2,
-      rating: 9,
-      text: "Feedback 2",
-    },
-    {
-      id: 3,
-      rating: 8,
-      text: "Feedback 3",
-    },
-  ]);
+  const [feedback, setFeedback] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
-  function deleteItem(id) {
+  useEffect(() => {
+    const getData = async () => {
+      const data = await fetchJson();
+      setFeedback(data);
+    };
+
+    getData();
+  }, []);
+
+  async function deleteItem(id) {
     console.log("deleting " + id);
 
     if (window.confirm("Are you sure?")) {
+      await fetch("/feedback/" + id, { method: "DELETE" });
       setFeedback(
         feedback.filter((item) => {
           return item.id !== id;
@@ -33,24 +28,52 @@ export const FeedbackProvider = ({ children }) => {
     }
   }
 
-  function addItem(newFeedback) {
-    setFeedback([newFeedback, ...feedback]);
+  async function addItem(newFeedback) {
+    const res = await fetch("/feedback", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify(newFeedback),
+    });
+    const data = await res.json();
+    setFeedback([data, ...feedback]);
   }
 
-  function updateItem(id, newItem) {
+  async function updateItem(id, newItem) {
+    const res = await fetch("/feedback/" + id, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newItem),
+    });
+
+    const data = await res.json();
+
     setFeedback(
       feedback.map((item) => {
         if (item.id === id) {
           return {
             id,
-            rating: newItem.rating,
-            text: newItem.text,
+            rating: data.rating,
+            text: data.text,
           };
         } else return item;
       })
     );
+
     currEdit.edit = false;
     currEdit.item = {};
+  }
+
+  async function fetchJson(id = "") {
+    const addr = "/feedback/" + id;
+    const db = await fetch(addr);
+    const Json = await db.json();
+
+    setLoading(false);
+    return Json;
   }
 
   const [currEdit, setCurrItem] = useState({
@@ -75,6 +98,7 @@ export const FeedbackProvider = ({ children }) => {
         editItem,
         currEdit,
         updateItem,
+        isLoading,
       }}
     >
       {children}
